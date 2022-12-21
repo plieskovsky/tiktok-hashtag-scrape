@@ -73,7 +73,7 @@ try:
     while seconds < 10 * 60:
         response = fetch_vids_info("#" + hashtag, offset)
         for vid in response['item_list']:
-            if seconds < 10 * 60:
+            if seconds > 10 * 60:
                 break
 
             id = vid["id"]
@@ -94,8 +94,8 @@ try:
                 continue
 
             print("downloading " + vid['desc'])
-            # name = 'video' + id + '.mp4'
-            # urllib.request.urlretrieve(downAddr, name)
+            # name = id + '.mp4'
+            # urllib.request.urlretrieve(downAddr, hashtag + "/videos/" + name)
 
             seconds += duration
             # persist new id and duration
