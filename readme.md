@@ -17,17 +17,10 @@ This is an unofficial api wrapper for TikTok.com in python. With this api you ar
 
 ### How to Run Script?
 
-1. After running above commands now you need to open terminal in your project folder
-   type following command:
-   
-   **python TikTok.py u tiktok_username**
-   
-   Ex:  `python TikTok.py u jannat_zubair29` 
-	[This will download videos from @jannat_zubair29 TikTok account]
-   
-2. For Downloading videos by **hashtag** type following command:
-   
-   **python TikTok.py h hashtag**
+U have to provide:
+- directory to which the videos will be downloaded
+- hashtags from which we want to download the videos
 
-   Ex: `python TikTok.py h cat`
-       [This will download videos from hastag "cat"]
+```
+python3 test.py /Users/plieskovsky/tkyt/gym gym,muscle
+```
