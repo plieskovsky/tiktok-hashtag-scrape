@@ -35,8 +35,10 @@ def prepare_files(dirPath):
     if not my_file.exists():
         os.mkdir(dirPath)
         os.mkdir(dirPath + "/videos")
+        os.mkdir(dirPath + "/logs")
         open(dirPath + "/videos/current_duration.txt", 'a').close()
         open(dirPath + "/ids.txt", 'a').close()
+        open(dirPath + "/logs/fetch_videos.log", 'a').close()
 
 
 def parse_duration(dirPath):
@@ -62,14 +64,16 @@ def parse_hashtags(hashtags):
 
 
 try:
-    logging.basicConfig(format='%(asctime)s %(process)d - %(levelname)s - %(message)s', level=logging.INFO)
-
     directory = sys.argv[1]
     hashtags = parse_hashtags(sys.argv[2])
 
     prepare_files(directory)
     seconds = parse_duration(directory)
     ids = parse_ids(directory)
+
+    logging.basicConfig(filename=directory + "/logs/fetch_videos.log",
+                        format='%(asctime)s %(process)d - %(levelname)s - %(message)s',
+                        level=logging.INFO)
 
     # iterate over all the hashtags if needed
     for hashtag in hashtags:
@@ -106,8 +110,8 @@ try:
                     continue
 
                 logging.info("downloading " + vid['desc'])
-                name = id + '.mp4'
-                urllib.request.urlretrieve(downAddr, hashtag + "/videos/" + name)
+                filePath = directory + "/videos/" + id + '.mp4'
+                urllib.request.urlretrieve(downAddr, filePath)
 
                 seconds += duration
                 # persist new id and duration
