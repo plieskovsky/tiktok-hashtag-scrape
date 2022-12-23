@@ -8,8 +8,8 @@ import time
 from pathlib import Path
 
 
-def get_cookies_from_file():
-    with open('cookies.json') as f:
+def get_cookies_from_file(path):
+    with open(path + '/cookies.json') as f:
         cookies = json.load(f)
 
     cookies_kv = {}
@@ -19,14 +19,14 @@ def get_cookies_from_file():
     return cookies_kv
 
 
-def fetch_vids_info(keyword, offset=0):
+def fetch_vids_info(path, keyword, offset=0):
     params = {
         'keyword': keyword,
         'offset': offset,
         #     maybe they do have also some param for size? so we could load like 30 at once :)
     }
     response = requests.get("http://us.tiktok.com/api/search/item/full/", params=params,
-                            cookies=get_cookies_from_file())
+                            cookies=get_cookies_from_file(path))
     return response.json()
 
 
@@ -78,7 +78,7 @@ try:
 
         # download until we have 10 minutes of videos
         while seconds < 10 * 60:
-            response = fetch_vids_info("#" + hashtag, offset)
+            response = fetch_vids_info(directory, "#" + hashtag, offset)
 
             # if response doesn't contain item_list log and continue
             if "item_list" not in response:
@@ -107,7 +107,7 @@ try:
                     continue
 
                 logging.info("downloading " + vid['desc'])
-                filePath = directory + "/videos/" + id + '.mp4'
+                filePath = directory + "/videos/" + id + '-raw.mp4'
                 urllib.request.urlretrieve(downAddr, filePath)
 
                 seconds += duration
