@@ -35,10 +35,8 @@ def prepare_files(dirPath):
     if not my_file.exists():
         os.mkdir(dirPath)
         os.mkdir(dirPath + "/videos")
-        os.mkdir(dirPath + "/logs")
         open(dirPath + "/videos/current_duration.txt", 'a').close()
         open(dirPath + "/ids.txt", 'a').close()
-        open(dirPath + "/logs/fetch_videos.log", 'a').close()
 
 
 def parse_duration(dirPath):
@@ -71,8 +69,7 @@ try:
     seconds = parse_duration(directory)
     ids = parse_ids(directory)
 
-    logging.basicConfig(filename=directory + "/logs/fetch_videos.log",
-                        format='%(asctime)s %(process)d - %(levelname)s - %(message)s',
+    logging.basicConfig(format='%(asctime)s %(process)d - %(levelname)s - %(message)s',
                         level=logging.INFO)
 
     # iterate over all the hashtags if needed
