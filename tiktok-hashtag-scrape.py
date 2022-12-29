@@ -106,9 +106,22 @@ try:
                 if duration > 25:
                     continue
 
+                # use only proper width and height videos
+                width = vidDetails["width"]
+                height = vidDetails["height"]
+                if height < 1000 or height > 1100 or width < 530 or width > 630:
+                    continue
+
                 logging.info("downloading " + vid['desc'])
                 filePath = directory + "/videos/" + id + '-raw.mp4'
-                urllib.request.urlretrieve(downAddr, filePath)
+
+                try:
+                    urllib.request.urlretrieve(downAddr, filePath)
+                except BaseException as e:
+                    logging.error("Exception occurred when downloading - removing file if present", exc_info=True)
+                    if os.path.exists(filePath):
+                        os.remove(filePath)
+                    exit(444)
 
                 seconds += duration
                 # persist new id and duration
