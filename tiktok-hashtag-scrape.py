@@ -1,5 +1,6 @@
 import json
 import os
+import random
 import sys
 import logging
 import requests
@@ -65,6 +66,7 @@ try:
     directory = sys.argv[1]
     hashtags = parse_hashtags(sys.argv[2])
 
+    random.shuffle(hashtags)
     prepare_files(directory)
     seconds = parse_duration(directory)
     ids = parse_ids(directory)
