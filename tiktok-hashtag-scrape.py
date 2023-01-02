@@ -72,6 +72,7 @@ try:
     ids = parse_ids(directory)
 
     logging.basicConfig(format='%(asctime)s %(process)d - %(levelname)s - %(message)s',
+                        stream=sys.stdout,
                         level=logging.INFO)
 
     # iterate over all the hashtags if needed
