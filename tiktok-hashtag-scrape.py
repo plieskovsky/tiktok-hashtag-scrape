@@ -40,6 +40,13 @@ def prepare_files(dirPath):
         open(dirPath + "/ids.txt", 'a').close()
 
 
+def contains_hashtag(hashtags, description):
+    for hashtag in hashtags:
+        if hashtag in description:
+            return True
+    return False
+
+
 def parse_duration(dirPath):
     with open(dirPath + "/videos/current_duration.txt") as f:
         lines = f.readlines()
@@ -107,6 +114,10 @@ try:
                 # use only short clips
                 duration = vidDetails['duration']
                 if duration > 25:
+                    continue
+
+                # use only videos that contain one of the hashtags in the description
+                if not contains_hashtag(hashtags, vid['desc']):
                     continue
 
                 # use only proper width and height videos
