@@ -130,6 +130,10 @@ try:
                 filePath = directory + "/videos/" + id + '-raw.mp4'
 
                 try:
+                    # set custom referer header to the request
+                    opener = urllib.request.build_opener()
+                    opener.addheaders = [('referer', 'https://www.tiktok.com/')]
+                    urllib.request.install_opener(opener)
                     urllib.request.urlretrieve(downAddr, filePath)
                 except BaseException as e:
                     logging.error("Exception occurred when downloading - removing file if present", exc_info=True)
