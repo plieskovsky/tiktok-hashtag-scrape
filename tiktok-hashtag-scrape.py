@@ -1,8 +1,11 @@
 import json
 import os
 import random
+import shutil
 import sys
 import logging
+from urllib.error import HTTPError
+
 import requests
 import urllib.request
 import time
@@ -135,6 +138,15 @@ try:
                     opener.addheaders = [('referer', 'https://www.tiktok.com/')]
                     urllib.request.install_opener(opener)
                     urllib.request.urlretrieve(downAddr, filePath)
+
+                except HTTPError as httperr:
+                    logging.error("HTTP error '%d' response for '%s', removing file if present", httperr.code, vid['desc'])
+                    if os.path.exists(filePath):
+                        os.remove(filePath)
+
+                    if httperr.code == 403:
+                        logging.error("403 error code - ignoring and continuing download")
+                        continue
                 except BaseException as e:
                     logging.error("Exception occurred when downloading - removing file if present", exc_info=True)
                     if os.path.exists(filePath):

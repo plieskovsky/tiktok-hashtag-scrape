@@ -39,3 +39,6 @@ python3 tiktok-hashtag-scrape.py /Users/youruser/videos funny,kids
 It currently downloads videos to fulfill 10 minutes of video. The sum of downloaded video durations is saved to a
 `<path-arg>videos/current_duration.txt` file. In order to download again after hitting the 10 minutes
 the content of this file has to be overwritten to `0`.
+
+In case the download return `403` HTTP code the info is logged and file download skipped. TikTok uses 403 to prevent
+private video downloads. 
