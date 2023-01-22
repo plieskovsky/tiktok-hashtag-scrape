@@ -93,6 +93,10 @@ try:
         while seconds < 10 * 60:
             response = fetch_vids_info(directory, "#" + hashtag, offset)
 
+            if response["status_code"] == 2483:
+                logging.error("Fetch videos returned not logged code: 2483")
+                logging.error(response)
+                exit(1)
             # if response doesn't contain item_list log and continue
             if "item_list" not in response:
                 logging.warning("item_list not found in response for hashtag '%s'", hashtag)
