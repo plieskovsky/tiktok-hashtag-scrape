@@ -23,15 +23,41 @@ def get_cookies_from_file(path):
     return cookies_kv
 
 
-def fetch_vids_info(path, keyword, offset=0):
+def fetch_vids_info(path, keyword, offset=0, tries=1):
     params = {
         'keyword': keyword,
         'offset': offset,
-        #     maybe they do have also some param for size? so we could load like 30 at once :)
     }
-    response = requests.get("http://us.tiktok.com/api/search/item/full/", params=params,
-                            cookies=get_cookies_from_file(path))
-    return response.json()
+
+    for i in range(tries):
+        try:
+            resp = requests.get("http://us.tiktok.com/api/search/item/full/", params=params,
+                                cookies=get_cookies_from_file(path), timeout=10)
+            return resp.json()
+        except ConnectTimeout:
+            if i < tries - 1:
+                logging.warning("Retrying to fetch videos due to timeout, try: '%d'", i)
+                continue
+            else:
+                raise
+
+
+def download_vid(ulr, path, tries=1):
+    for i in range(tries):
+        try:
+            headers = {'referer': 'https://www.tiktok.com/'}
+            req = requests.get(ulr, headers=headers, timeout=10, stream=True)
+            # Open the output file and make sure we write in binary mode
+            with open(path, 'wb') as fh:
+                for chunk in req.iter_content(1024 * 1024):
+                    fh.write(chunk)
+
+        except ConnectTimeout:
+            if i < tries - 1:
+                logging.warning("Retrying to download videos due to timeout, try: '%d'", i)
+                continue
+            else:
+                raise
 
 
 def prepare_files(dirPath):
@@ -91,7 +117,7 @@ try:
 
         # download until we have 10 minutes of videos
         while seconds < 10 * 60:
-            response = fetch_vids_info(directory, "#" + hashtag, offset)
+            response = fetch_vids_info(directory, "#" + hashtag, offset, tries=10)
 
             if response["status_code"] == 2483:
                 logging.error("Fetch videos returned not logged code: 2483")
@@ -133,18 +159,13 @@ try:
                 if height < 1000 or height > 1100 or width < 530 or width > 630:
                     continue
 
-                logging.info("downloading " + vid['desc'])
                 filePath = directory + "/videos/" + id + '-raw.mp4'
-
                 try:
-                    # set custom referer header to the request
-                    opener = urllib.request.build_opener()
-                    opener.addheaders = [('referer', 'https://www.tiktok.com/')]
-                    urllib.request.install_opener(opener)
-                    urllib.request.urlretrieve(downAddr, filePath)
-
+                    logging.info("downloading " + vid['desc'])
+                    download_vid(downAddr, filePath, tries=10)
                 except HTTPError as httperr:
-                    logging.error("HTTP error '%d' response for '%s', removing file if present", httperr.code, vid['desc'])
+                    logging.error("HTTP error '%d' response for '%s', removing file if present", httperr.code,
+                                  vid['desc'])
                     if os.path.exists(filePath):
                         os.remove(filePath)
 
@@ -168,7 +189,7 @@ try:
             logging.info("moving request offset for hashtag '%s' to '%d'", hashtag, offset)
             time.sleep(5)
 
-    if seconds < 10*60:
+    if seconds < 10 * 60:
         logging.warning("could not find enough videos to make 10 min compilation")
         exit(1)
 
