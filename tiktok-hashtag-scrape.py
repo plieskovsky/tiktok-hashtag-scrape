@@ -54,7 +54,7 @@ def download_vid(ulr, path, tries=1):
                     os.remove(filePath)
                 if req.status_code == 403:
                     logging.error("403 error code - ignoring and continuing download")
-                    return false
+                    return False
                 else:
                     # throw to end program on non 403 error codes
                     raise Exception("Unexpected video download response code: "+req.status_code)
@@ -63,7 +63,7 @@ def download_vid(ulr, path, tries=1):
             with open(path, 'wb') as fh:
                 for chunk in req.iter_content(1024 * 1024):
                     fh.write(chunk)
-            return true
+            return True
 
         except ConnectTimeout:
             if i < tries - 1:
