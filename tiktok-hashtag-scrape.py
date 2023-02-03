@@ -47,10 +47,23 @@ def download_vid(ulr, path, tries=1):
         try:
             headers = {'referer': 'https://www.tiktok.com/'}
             req = requests.get(ulr, headers=headers, timeout=10, stream=True)
+            # non 200 status code
+            if req.status_code >= 300:
+                logging.error("HTTP error '%d' response, removing file if present", req.status_code)
+                if os.path.exists(filePath):
+                    os.remove(filePath)
+                if req.status_code == 403:
+                    logging.error("403 error code - ignoring and continuing download")
+                    return false
+                else:
+                    # throw to end program on non 403 error codes
+                    raise Exception("Unexpected video download response code: "+req.status_code)
+
             # Open the output file and make sure we write in binary mode
             with open(path, 'wb') as fh:
                 for chunk in req.iter_content(1024 * 1024):
                     fh.write(chunk)
+            return true
 
         except ConnectTimeout:
             if i < tries - 1:
@@ -162,16 +175,11 @@ try:
                 filePath = directory + "/videos/" + id + '-raw.mp4'
                 try:
                     logging.info("downloading " + vid['desc'])
-                    download_vid(downAddr, filePath, tries=10)
-                except HTTPError as httperr:
-                    logging.error("HTTP error '%d' response for '%s', removing file if present", httperr.code,
-                                  vid['desc'])
-                    if os.path.exists(filePath):
-                        os.remove(filePath)
-
-                    if httperr.code == 403:
-                        logging.error("403 error code - ignoring and continuing download")
+                    success = download_vid(downAddr, filePath, tries=10)
+                    # if video wasn't successfully downloaded but no exception thrown just continue
+                    if not success:
                         continue
+
                 except BaseException as e:
                     logging.error("Exception occurred when downloading - removing file if present", exc_info=True)
                     if os.path.exists(filePath):
