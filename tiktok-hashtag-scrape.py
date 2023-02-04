@@ -4,7 +4,8 @@ import random
 import shutil
 import sys
 import logging
-from urllib.error import HTTPError
+from requests import ReadTimeout, ConnectTimeout, Timeout
+
 
 import requests
 import urllib.request
@@ -31,10 +32,12 @@ def fetch_vids_info(path, keyword, offset=0, tries=1):
 
     for i in range(tries):
         try:
+            logging.info("fetching vids using requests.get - start")
             resp = requests.get("http://us.tiktok.com/api/search/item/full/", params=params,
                                 cookies=get_cookies_from_file(path), timeout=10)
+            logging.info("fetching vids using requests.get - got response")
             return resp.json()
-        except ConnectTimeout:
+        except (ConnectTimeout, ReadTimeout, Timeout):
             if i < tries - 1:
                 logging.warning("Retrying to fetch videos due to timeout, try: '%d'", i)
                 continue
@@ -65,7 +68,7 @@ def download_vid(ulr, path, tries=1):
                     fh.write(chunk)
             return True
 
-        except ConnectTimeout:
+        except (ConnectTimeout, ReadTimeout, Timeout):
             if i < tries - 1:
                 logging.warning("Retrying to download videos due to timeout, try: '%d'", i)
                 continue
@@ -196,6 +199,7 @@ try:
             offset = response['cursor']
             logging.info("moving request offset for hashtag '%s' to '%d'", hashtag, offset)
             time.sleep(5)
+            logging.info("sleep finished")
 
     if seconds < 10 * 60:
         logging.warning("could not find enough videos to make 10 min compilation")
