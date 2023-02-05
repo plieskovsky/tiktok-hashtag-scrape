@@ -133,6 +133,7 @@ try:
 
         # download until we have 10 minutes of videos
         while seconds < 10 * 60:
+            logging.info("fetching videos for hashtag '%s' and offset '%d'", hashtag, offset)
             response = fetch_vids_info(directory, "#" + hashtag, offset, tries=10)
 
             if response["status_code"] == 2483:
@@ -198,8 +199,6 @@ try:
 
             offset = response['cursor']
             logging.info("moving request offset for hashtag '%s' to '%d'", hashtag, offset)
-            time.sleep(5)
-            logging.info("sleep finished")
 
     if seconds < 10 * 60:
         logging.warning("could not find enough videos to make 10 min compilation")
