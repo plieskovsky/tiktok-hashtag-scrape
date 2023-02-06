@@ -66,6 +66,7 @@ def download_vid(ulr, path, tries=1):
             with open(path, 'wb') as fh:
                 for chunk in req.iter_content(1024 * 1024):
                     fh.write(chunk)
+                    logging.info("wrote video chunk")
             return True
 
         except (ConnectTimeout, ReadTimeout, Timeout):
