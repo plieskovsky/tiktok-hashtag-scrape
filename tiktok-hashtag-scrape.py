@@ -81,6 +81,12 @@ def download_vid(ulr, path, tries=1):
                 continue
             else:
                 raise
+        except ConnectionResetError:
+            if i < tries - 1:
+                logging.warning("Retrying to fetch videos due to connection reset error, try: '%d'", i)
+                continue
+            else:
+                raise
 
 
 def prepare_files(dirPath):
