@@ -212,7 +212,7 @@ try:
 
             offset = response['cursor']
             logging.info("moving request offset for hashtag '%s' to '%d'", hashtag, offset)
-            sleep(5)
+            time.sleep(5)
 
     if seconds < 10 * 60:
         logging.warning("could not find enough videos to make 10 min compilation")
