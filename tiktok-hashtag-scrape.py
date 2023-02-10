@@ -32,10 +32,8 @@ def fetch_vids_info(path, keyword, offset=0, tries=1):
 
     for i in range(tries):
         try:
-            logging.info("fetching vids using requests.get - start")
             resp = requests.get("http://us.tiktok.com/api/search/item/full/", params=params,
                                 cookies=get_cookies_from_file(path), timeout=3)
-            logging.info("fetching vids using requests.get - got response")
             return resp.json()
         except (ConnectTimeout, ReadTimeout, Timeout):
             if i < tries - 1:
@@ -72,7 +70,6 @@ def download_vid(ulr, path, tries=1):
             with open(path, 'wb') as fh:
                 for chunk in req.iter_content(1024 * 1024):
                     fh.write(chunk)
-                    logging.info("wrote video chunk")
             return True
 
         except (ConnectTimeout, ReadTimeout, Timeout):
@@ -145,7 +142,7 @@ try:
         offset = 0
 
         # download until we have 10 minutes of videos
-        while seconds < 10 * 60:
+        while seconds < 6 * 60:
             logging.info("fetching videos for hashtag '%s' and offset '%d'", hashtag, offset)
             response = fetch_vids_info(directory, "#" + hashtag, offset, tries=10)
 
