@@ -63,8 +63,13 @@ def download_vid(ulr, path, tries=1):
                     logging.error("403 error code - ignoring and continuing download")
                     return False
                 else:
-                    # throw to end program on non 403 error codes
-                    raise Exception("Unexpected video download response code: "+req.status_code)
+                    # non 403 HTTP responses
+                    if i < tries - 1:
+                        logging.warning("Retrying to download videos due to response '%d', try: '%d'", req.status_code, i)
+                        time.sleep(5)
+                        continue
+                    else:
+                        raise Exception("Unexpected video download response code: "+req.status_code)
 
             # Open the output file and make sure we write in binary mode
             with open(path, 'wb') as fh:
@@ -125,6 +130,7 @@ def parse_hashtags(hashtags):
 
 
 try:
+    video_mins = 6
     directory = sys.argv[1]
     hashtags = parse_hashtags(sys.argv[2])
 
@@ -140,17 +146,25 @@ try:
     # iterate over all the hashtags if needed
     for hashtag in hashtags:
         offset = 0
+        fetch_videos_retries = 1
 
         # download until we have 10 minutes of videos
-        while seconds < 6 * 60:
+        while seconds < video_mins * 60:
             logging.info("fetching videos for hashtag '%s' and offset '%d'", hashtag, offset)
             response = fetch_vids_info(directory, "#" + hashtag, offset, tries=10)
 
             if response["status_code"] == 2483:
                 logging.error("Fetch videos returned not logged code: 2483")
                 logging.error(response)
-                exit(1)
-            # if response doesn't contain item_list log and continue
+                if fetch_videos_retries == 3:
+                    logging.error("Fetch videos returned 2483 '%d' times - stopping execution", fetch_videos_retries)
+                    exit(1)
+
+                logging.error("retrying videos fetching in 10 min")
+                fetch_videos_retries += 1
+                time.sleep(60*10)
+                continue
+            # if response doesn't contain item_list log and continue with another hashtag
             if "item_list" not in response:
                 logging.warning("item_list not found in response for hashtag '%s'", hashtag)
                 break
@@ -190,8 +204,11 @@ try:
                 try:
                     logging.info("downloading " + vid['desc'])
                     success = download_vid(downAddr, filePath, tries=10)
-                    # if video wasn't successfully downloaded but no exception thrown just continue
+                    # if video response was 403 add to ids list and continue
                     if not success:
+                        # add to the ids list and continue
+                        with open(directory + "/ids.txt", "a") as f:
+                            f.write(id + "\n")
                         continue
 
                 except BaseException as e:
@@ -211,8 +228,8 @@ try:
             logging.info("moving request offset for hashtag '%s' to '%d'", hashtag, offset)
             time.sleep(5)
 
-    if seconds < 10 * 60:
-        logging.warning("could not find enough videos to make 10 min compilation")
+    if seconds < video_mins * 60:
+        logging.warning("could not find enough videos to make '%d' min compilation", video_mins)
         exit(1)
 
 except BaseException as e:
