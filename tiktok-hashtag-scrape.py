@@ -158,7 +158,7 @@ try:
                 logging.error(response)
                 if fetch_videos_retries == 3:
                     logging.error("Fetch videos returned 2483 '%d' times - stopping execution", fetch_videos_retries)
-                    exit(1)
+                    sys.exit(3)
 
                 logging.error("retrying videos fetching in 10 min")
                 fetch_videos_retries += 1
@@ -215,7 +215,7 @@ try:
                     logging.error("Exception occurred when downloading - removing file if present", exc_info=True)
                     if os.path.exists(filePath):
                         os.remove(filePath)
-                    exit(444)
+                    sys.exit(4)
 
                 seconds += duration
                 # persist new id and duration
@@ -230,8 +230,8 @@ try:
 
     if seconds < video_mins * 60:
         logging.warning("could not find enough videos to make '%d' min compilation", video_mins)
-        exit(1)
+        sys.exit(2)
 
 except BaseException as e:
     logging.error("Exception occurred", exc_info=True)
-    exit(555)
+    sys.exit(1)
