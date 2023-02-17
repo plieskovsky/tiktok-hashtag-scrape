@@ -146,7 +146,6 @@ try:
     # iterate over all the hashtags if needed
     for hashtag in hashtags:
         offset = 0
-        fetch_videos_retries = 1
 
         # download until we have 10 minutes of videos
         while seconds < video_mins * 60:
@@ -154,16 +153,10 @@ try:
             response = fetch_vids_info(directory, "#" + hashtag, offset, tries=10)
 
             if response["status_code"] == 2483:
-                logging.error("Fetch videos returned not logged code: 2483")
+                logging.error("Fetch videos returned not logged code: 2483 - stopping execution")
                 logging.error(response)
-                if fetch_videos_retries == 3:
-                    logging.error("Fetch videos returned 2483 '%d' times - stopping execution", fetch_videos_retries)
-                    sys.exit(3)
+                sys.exit(3)
 
-                logging.error("retrying videos fetching in 10 min")
-                fetch_videos_retries += 1
-                time.sleep(60*10)
-                continue
             # if response doesn't contain item_list log and continue with another hashtag
             if "item_list" not in response:
                 logging.warning("item_list not found in response for hashtag '%s'", hashtag)
