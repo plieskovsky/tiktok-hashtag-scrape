@@ -13,84 +13,6 @@ import time
 from pathlib import Path
 
 
-def get_cookies_from_file(path):
-    with open(path + '/cookies.json') as f:
-        cookies = json.load(f)
-
-    cookies_kv = {}
-    # Just use the name and the value properties
-    for cookie in cookies:
-        cookies_kv[cookie['name']] = cookie['value']
-    return cookies_kv
-
-
-def fetch_vids_info(path, keyword, offset=0, tries=1):
-    params = {
-        'keyword': keyword,
-        'offset': offset,
-    }
-
-    for i in range(tries):
-        try:
-            resp = requests.get("http://us.tiktok.com/api/search/item/full/", params=params,
-                                cookies=get_cookies_from_file(path), timeout=3)
-            return resp.json()
-        except (ConnectTimeout, ReadTimeout, Timeout):
-            if i < tries - 1:
-                logging.warning("Retrying to fetch videos due to error, try: '%d'", i)
-                continue
-            else:
-                raise
-        except ConnectionResetError:
-            if i < tries - 1:
-                logging.warning("Retrying to fetch videos due to connection reset error, try: '%d'", i)
-                continue
-            else:
-                raise
-
-
-def download_vid(ulr, path, tries=1):
-    for i in range(tries):
-        try:
-            headers = {'referer': 'https://www.tiktok.com/'}
-            req = requests.get(ulr, headers=headers, timeout=3, stream=True)
-            # non 200 status code
-            if req.status_code >= 300:
-                logging.error("HTTP error '%d' response, removing file if present", req.status_code)
-                if os.path.exists(filePath):
-                    os.remove(filePath)
-                if req.status_code == 403:
-                    logging.error("403 error code - ignoring and continuing download")
-                    return False
-                else:
-                    # non 403 HTTP responses
-                    if i < tries - 1:
-                        logging.warning("Retrying to download videos due to response '%d', try: '%d'", req.status_code, i)
-                        time.sleep(5)
-                        continue
-                    else:
-                        raise Exception("Unexpected video download response code: "+req.status_code)
-
-            # Open the output file and make sure we write in binary mode
-            with open(path, 'wb') as fh:
-                for chunk in req.iter_content(1024 * 1024):
-                    fh.write(chunk)
-            return True
-
-        except (ConnectTimeout, ReadTimeout, Timeout):
-            if i < tries - 1:
-                logging.warning("Retrying to download videos due to timeout, try: '%d'", i)
-                continue
-            else:
-                raise
-        except ConnectionResetError:
-            if i < tries - 1:
-                logging.warning("Retrying to fetch videos due to connection reset error, try: '%d'", i)
-                continue
-            else:
-                raise
-
-
 def prepare_files(dirPath):
     my_file = Path(dirPath)
     if not my_file.exists():
@@ -129,6 +51,84 @@ def parse_hashtags(hashtags):
     return str(hashtags).split(",")
 
 
+def get_cookies_from_file(path):
+    with open(path + '/cookies.json') as f:
+        cookies = json.load(f)
+
+    cookies_kv = {}
+    # Just use the name and the value properties
+    for cookie in cookies:
+        cookies_kv[cookie['name']] = cookie['value']
+    return cookies_kv
+
+
+def fetch_vids_info(path, keyword, cookies, offset=0, tries=1):
+    params = {
+        'keyword': keyword,
+        'offset': offset,
+    }
+
+    for i in range(tries):
+        try:
+            resp = requests.get("http://us.tiktok.com/api/search/item/full/", params=params,
+                                cookies=cookies, timeout=3)
+            return resp.json()
+        except (ConnectTimeout, ReadTimeout, Timeout):
+            if i < tries - 1:
+                logging.warning("Retrying to fetch videos due to error, try: '%d'", i)
+                continue
+            else:
+                raise
+        except ConnectionResetError:
+            if i < tries - 1:
+                logging.warning("Retrying to fetch videos due to connection reset error, try: '%d'", i)
+                continue
+            else:
+                raise
+
+
+def download_vid(ulr, path, cookies, tries=1):
+    for i in range(tries):
+        try:
+            headers = {'referer': 'https://www.tiktok.com/'}
+            req = requests.get(ulr, headers=headers, cookies=cookies, timeout=3, stream=True)
+            # non 200 status code
+            if req.status_code >= 300:
+                logging.error("HTTP error '%d' response, removing file if present", req.status_code)
+                if os.path.exists(filePath):
+                    os.remove(filePath)
+                if req.status_code == 403:
+                    logging.error("403 error code - ignoring and continuing download")
+                    return False
+                else:
+                    # non 403 HTTP responses
+                    if i < tries - 1:
+                        logging.warning("Retrying to download videos due to response '%d', try: '%d'", req.status_code, i)
+                        time.sleep(5)
+                        continue
+                    else:
+                        raise Exception("Unexpected video download response code: "+req.status_code)
+
+            # Open the output file and make sure we write in binary mode
+            with open(path, 'wb') as fh:
+                for chunk in req.iter_content(1024 * 1024):
+                    fh.write(chunk)
+            return True
+
+        except (ConnectTimeout, ReadTimeout, Timeout):
+            if i < tries - 1:
+                logging.warning("Retrying to download videos due to timeout, try: '%d'", i)
+                continue
+            else:
+                raise
+        except ConnectionResetError:
+            if i < tries - 1:
+                logging.warning("Retrying to fetch videos due to connection reset error, try: '%d'", i)
+                continue
+            else:
+                raise
+
+
 try:
     video_mins = 6
     directory = sys.argv[1]
@@ -138,6 +138,7 @@ try:
     prepare_files(directory)
     seconds = parse_duration(directory)
     ids = parse_ids(directory)
+    cookies = get_cookies_from_file(directory)
 
     logging.basicConfig(format='%(asctime)s %(process)d - %(levelname)s - %(message)s',
                         stream=sys.stdout,
@@ -150,7 +151,7 @@ try:
         # download until we have 10 minutes of videos
         while seconds < video_mins * 60:
             logging.info("fetching videos for hashtag '%s' and offset '%d'", hashtag, offset)
-            response = fetch_vids_info(directory, "#" + hashtag, offset, tries=10)
+            response = fetch_vids_info(directory, "#" + hashtag, cookies, offset, tries=10)
 
             if response["status_code"] == 2483:
                 logging.error("Fetch videos returned not logged code: 2483 - stopping execution")
@@ -196,7 +197,7 @@ try:
                 filePath = directory + "/videos/" + id + '-raw.mp4'
                 try:
                     logging.info("downloading " + vid['desc'])
-                    success = download_vid(downAddr, filePath, tries=10)
+                    success = download_vid(downAddr, filePath, cookies, tries=10)
                     # if video response was 403 add to ids list and continue
                     if not success:
                         # add to the ids list and continue
