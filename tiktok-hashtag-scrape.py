@@ -130,7 +130,7 @@ def download_vid(ulr, path, cookies, tries=1):
 
 
 try:
-    video_mins = 6
+    video_seconds = 6*60
     directory = sys.argv[1]
     hashtags = parse_hashtags(sys.argv[2])
 
@@ -148,8 +148,8 @@ try:
     for hashtag in hashtags:
         offset = 0
 
-        # download until we have 10 minutes of videos
-        while seconds < video_mins * 60:
+        # download until we have desired video lenght
+        while seconds < video_seconds:
             logging.info("fetching videos for hashtag '%s' and offset '%d'", hashtag, offset)
             response = fetch_vids_info(directory, "#" + hashtag, cookies, offset, tries=10)
 
@@ -164,7 +164,7 @@ try:
                 break
 
             for vid in response['item_list']:
-                if seconds > 10 * 60:
+                if seconds > video_seconds:
                     break
 
                 id = vid["id"]
@@ -222,7 +222,7 @@ try:
             logging.info("moving request offset for hashtag '%s' to '%d'", hashtag, offset)
             time.sleep(5)
 
-    if seconds < video_mins * 60:
+    if seconds < video_seconds:
         logging.warning("could not find enough videos to make '%d' min compilation", video_mins)
         sys.exit(2)
 
