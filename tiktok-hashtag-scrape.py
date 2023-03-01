@@ -223,7 +223,7 @@ try:
             time.sleep(5)
 
     if seconds < video_seconds:
-        logging.warning("could not find enough videos to make '%d' min compilation", video_mins)
+        logging.warning("could not find enough videos to make '%d' seconds compilation", video_seconds)
         sys.exit(2)
 
 except BaseException as e:
