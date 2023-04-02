@@ -36,9 +36,9 @@ python3 tiktok-hashtag-scrape.py /Users/youruser/videos funny,kids
 ```
 
 ## Limitations
-It currently downloads videos to fulfill 6 minutes of video. The sum of downloaded video durations is saved to a
+1. It currently downloads videos to fulfill 6 minutes of video. The sum of downloaded video durations is saved to a
 `<path-arg>videos/current_duration.txt` file. In order to download again after hitting the 10 minutes
 the content of this file has to be overwritten to `0`.
-
-In case the download return `403` HTTP code the info is logged and file download skipped. TikTok uses 403 to prevent
+2. In case the download return `403` HTTP code the info is logged and file download skipped. TikTok uses 403 to prevent
 private video downloads. 
+3. Tiktok has rate limitting in place, if you encounter responses saying that you need to log into your account you most probably hit the rate limiting. To me scraping the videos twice a day seems to work ok without being rate limited.
